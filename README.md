@@ -37,7 +37,7 @@ cd weather-page
 npm install
 ```
 
-4. Set up environment variables:
+4. Set up environment variables: If you do not enter API key the page runs on defaut data
 ```bash
 NEXT_PUBLIC_OPENWEATHERMAP_API_KEY=your_api_key_here
 ```
