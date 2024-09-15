@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import { formatInTimeZone } from 'date-fns-tz';
 import { enIN } from 'date-fns/locale';
 import Head from 'next/head';
+import defaultData from './defaultData.json'; 
 
 interface WeatherDetail {
   dt: number;
@@ -91,25 +92,70 @@ function returnWeatherColor(currWeather:string){
   else if(currWeather=='tornado' || currWeather=='hurricane' || currWeather=='hail') return '#B0E0E6'
 }
 
+// const defaultObject={
+//   "dt": 1726401600,
+//   "main": {
+//     "temp": 299.26,
+//     "feels_like": 299.26,
+//     "temp_min": 299.26,
+//     "temp_max": 299.26,
+//     "pressure": 1005,
+//     "humidity": 75,
+//     "sea_level": 1005,
+//     "grnd_level": 951,
+//     "temp_kf": 0
+//   },
+//   "weather": [
+//     {
+//       "id": 500,
+//       "main": "Rain",
+//       "description": "light rain",
+//       "icon": "10d"
+//     }
+//   ],
+//   "clouds": {
+//     "all": 89
+//   },
+//   "wind": {
+//     "speed": 3.89,
+//     "deg": 312,
+//     "gust": 6.54
+//   },
+//   "rain": {
+//     "3h": 1
+//   },
+//   "visibility": 10000,
+//   "pop": 0.56,
+//   "sys": {
+//     "pod": "d"
+//   },
+//   "dt_txt": "2024-09-15 12:00:00"
+// }
 
 
 export default function Home() {
   const [place, setPlace] = useAtom(placeAtom);
   const [loadingCity] = useAtom(loadingCityAtom);
   const [currWeather, setCurrWeather]=useState('');
-  const apiKey = process.env.NEXT_PUBLIC_API_KEY;
+  const apiKey =process.env.NEXT_PUBLIC_API_KEY||null;/* Enter uor API key in the env.local file and access here using process.env.NEXT_PUBLIC_API_KEY*/
   const { isLoading, error, data, refetch} = useQuery<WeatherData>('repoData',async () =>{
-    const {data}=await axios.get(`https://api.openweathermap.org/data/2.5/forecast?q=${place}&appid=${apiKey}&cnt=56`);
+    try{const {data}=await axios.get(`https://api.openweathermap.org/data/2.5/forecast?q=${place}&appid=${apiKey}&cnt=56`);
     setCurrWeather(data?.list[0]?.weather[0].description)
     return data;
+    }catch(error){
+    console.error('Error fetching weather data:', error," Using default data");
+    setCurrWeather(defaultData?.list[0]?.weather[0].description)
+      return defaultData; // Use the imported defaultData
+    }
   }
   );
 
   useEffect(()=>{
     refetch()
   },[place,refetch])
+  
 
-  const firstData=data?.list[0];
+  const firstData=(data?.list[0])
   // setCurrTemp(firstData?.main.temp??0);
 
 
@@ -153,7 +199,7 @@ export default function Home() {
         <title>Weather</title>
         <meta name="description" content="Description of my page" />
       </Head>
-    <div className={`flex flex-col gap-4 bg-[${returnWeatherColor(currWeather)}] min-h-screen`}>
+    <div className={`flex flex-col gap-4 min-h-screen`} style={{ backgroundColor:returnWeatherColor(currWeather) }}>
       <Navbar location={data?.city.name}/>
       <main className="px-3 max-w-7xl mx-auto flex flex-col gap-9 pb-10 pt-4 w-5/6">
       {loadingCity ? (
